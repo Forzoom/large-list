@@ -1,0 +1,29 @@
+{
+  "name": "large-list",
+  "version": "0.0.1",
+  "description": "list container element for performance",
+  "main": "index.js",
+  "module": "dist/large-list.esm.js",
+  "repository": "git@github.com:Forzoom/large-list.git",
+  "author": "Forzoom",
+  "license": "MIT",
+  "typings": "./types/index.d.ts",
+  "scripts": {
+    "build": "node build/build.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/core": "^7.7.4",
+    "@babel/plugin-proposal-decorators": "^7.7.4",
+    "@babel/preset-env": "^7.7.4",
+    "@babel/preset-typescript": "^7.7.4",
+    "rollup": "^1.27.4",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-uglify": "^6.0.3",
+    "typescript": "^3.7.2",
+    "vue": "^2.6.10",
+    "vue-property-decorator": "^8.3.0"
+  }
+}
