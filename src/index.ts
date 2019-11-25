@@ -12,7 +12,7 @@ import { isUndef, isPlainObject } from './utils';
 @Component({
     name: 'LargeList',
 })
-export default class LargeList extends Vue {
+export default class LargeListComponent extends Vue {
     /** 全部数据列表 */
     @Prop({ type: Array, default() { return []; } }) public list!: LargeList.ListItem[];
     /** 未加载条目的默认高度 */

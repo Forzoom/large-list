@@ -12,6 +12,7 @@ module.exports = exports = [
             file: './dist/large-list.esm.js',
             format: 'esm',
         },
+        external: [ 'core-js', 'vue' ],
         plugins: [
             resolve({
                 extensions,
@@ -29,6 +30,7 @@ module.exports = exports = [
             file: './dist/large-list.cjs.js',
             format: 'cjs',
         },
+        external: [ 'core-js', 'vue' ],
         plugins: [
             resolve({
                 extensions,
@@ -47,6 +49,7 @@ module.exports = exports = [
             name: 'LargeList',
             format: 'umd',
         },
+        external: [ 'core-js', 'vue' ],
         plugins: [
             resolve({
                 extensions,
@@ -65,6 +68,7 @@ module.exports = exports = [
             name: 'LargeList',
             format: 'umd',
         },
+        external: [ 'core-js', 'vue' ],
         plugins: [
             resolve({
                 extensions,

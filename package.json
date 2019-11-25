@@ -12,8 +12,12 @@
     "build": "node build/build.js"
   },
   "dependencies": {},
+  "peerDependencies": {
+    "core-js": "2"
+  },
   "devDependencies": {
     "@babel/core": "^7.7.4",
+    "@babel/plugin-proposal-class-properties": "^7.7.4",
     "@babel/plugin-proposal-decorators": "^7.7.4",
     "@babel/preset-env": "^7.7.4",
     "@babel/preset-typescript": "^7.7.4",
