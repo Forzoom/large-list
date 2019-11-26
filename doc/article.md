@@ -6,8 +6,8 @@
 
 ```html
 <div class="large-list">
-    <PostCard v-for="(post, index) in list" :key="post.id" :post="post"></PostCard>
-  </div>
+  <PostCard v-for="(post, index) in list" :key="post.id" :post="post"></PostCard>
+</div>
 ```
 
 ```javascript
@@ -27,27 +27,29 @@ export default {
 先来考虑最简单的情况，假设所有的`<PostCard>`的高度都是100，来实现上面所说的效果。list数组依然包含所有的数据，但我们需要另外一个数组，决定需要展示哪些数据。
 
 ```javascript
-// js修改如下
-data() {
-  return {
-    startIndex: 0,
-    endIndex: 0,
-    // 容器高度信息
-    containerHeight: 0,
-  };
-},
-computed: {
-  /**
-   * 展示列表
-   */
-  displayList() {
-    return this.list.slice(this.startIndex, this.endIndex);
+{
+  // ...
+  data() {
+    return {
+      startIndex: 0,
+      endIndex: 0,
+      // 容器高度信息
+      containerHeight: 0,
+    };
   },
+  computed: {
+    /**
+     * 展示列表
+     */
+    displayList() {
+      return this.list.slice(this.startIndex, this.endIndex);
+    },
+  }
+  // ...
 }
 ```
 
 ```html
-<!--html修改如下-->
 <PostCard v-for="(post, index) in displayList" :key="post.id" :post="post"></PostCard>
 ```
 现在我们要想办法确定`startIndex`和`endIndex`，`startIndex`是可视列表(displayList)中的第一个元素的下标，endIndex是最后一个元素的下标+1，在固定高度的情况下，`startIndex`和`endIndex`的计算十分简单
@@ -204,62 +206,66 @@ export default {
 这是使用模板所无法做到的事情，需要使用更加灵活的render函数来实现。
 
 ```javascript
-public render(h: typeof Vue.prototype.$createElement) {
-  const displayList = this.$slots.default || [];
-  displayList.forEach((vnode) => {
-    /** 组件实例 */
-    const instance = vnode.componentInstance;
-    /** 组件配置 */
-    const options = vnode.componentOptions;
-    // tip: 依赖于未公开的instance._events，并不是一件好事
-    // 如果组件已经实例化，并且没有监听heightChange事件
-    if (instance && !instance._events.heightChange) {
-      instance.$on('heightChange', this.onHeightChange);
-    } else if (options) {
-      // 
-      if (options.listeners) {
-        options.listeners.heightChange = this.onHeightChange;
-      } else {
-        options.listeners = {
-          heightChange: this.onHeightChange,
-        };
-      }
-    } else if (!instance) {
-      // 组件尚未实例化，还可以通过修改虚拟节点的数据的形式，来实施监听
-      if (vnode.data) {
-        if (vnode.data.on) {
-          vnode.data.on.heightChange = this.onHeightChange;
+{
+  // ...
+  render(h) {
+    const displayList = this.$slots.default || [];
+    displayList.forEach((vnode) => {
+      /** 组件实例 */
+      const instance = vnode.componentInstance;
+      /** 组件配置 */
+      const options = vnode.componentOptions;
+      // tip: 依赖于未公开的instance._events，并不是一件好事
+      // 如果组件已经实例化，并且没有监听heightChange事件
+      if (instance && !instance._events.heightChange) {
+        instance.$on('heightChange', this.onHeightChange);
+      } else if (options) {
+        // 
+        if (options.listeners) {
+          options.listeners.heightChange = this.onHeightChange;
         } else {
-          vnode.data.on = {
+          options.listeners = {
             heightChange: this.onHeightChange,
           };
         }
+      } else if (!instance) {
+        // 组件尚未实例化，还可以通过修改虚拟节点的数据的形式，来实施监听
+        if (vnode.data) {
+          if (vnode.data.on) {
+            vnode.data.on.heightChange = this.onHeightChange;
+          } else {
+            vnode.data.on = {
+              heightChange: this.onHeightChange,
+            };
+          }
+        }
       }
-    }
-    // 没有data的话，可能哪里存在问题
-    if (vnode.data) {
-      const style = vnode.data.style;
-      // @ts-ignore
-      const id = vnode.componentOptions!.propsData!.id;
-      const top = this.topMap[id] + 'px';
-      if (!style) {
-        vnode.data.style = {
-          top,
-        };
-      } else if (typeof style === 'string') {
-        vnode.data.style = style + `; top: ${top}`;
-      } else if (isPlainObject(style)) {
+      // 没有data的话，可能哪里存在问题
+      if (vnode.data) {
+        const style = vnode.data.style;
         // @ts-ignore
-        vnode.data.style.top = top;
+        const id = vnode.componentOptions!.propsData!.id;
+        const top = this.topMap[id] + 'px';
+        if (!style) {
+          vnode.data.style = {
+            top,
+          };
+        } else if (typeof style === 'string') {
+          vnode.data.style = style + `; top: ${top}`;
+        } else if (isPlainObject(style)) {
+          // @ts-ignore
+          vnode.data.style.top = top;
+        }
       }
-    }
-  });
+    });
 
-  return h('div', {
-    class: 'large-list',
-    style: {
-        height: this.containerHeight + 'px',
-    },
-  }, displayList);
+    return h('div', {
+      class: 'large-list',
+      style: {
+          height: this.containerHeight + 'px',
+      },
+    }, displayList);
+  },
+  // ...
 }
 ```
