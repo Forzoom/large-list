@@ -1,3 +1,4 @@
+import Vue from 'vue';
 import { isUndef, isPlainObject } from './utils';
 
 // 在滚动完成后，如何确认当前应该显示的内容，需要一个跳跃表，跳跃表实际上是二分的逻辑，实时使用二分和使用跳跃表有什么区别吗？
@@ -169,108 +170,108 @@ export default {
 
             this.pendingRefresh = true;
         },
-        created() {
-            let data = null;
-            if (this.load && (data = this.load())) {
-                // 如果存在持久化数据情况下
-                this.topMap = data.topMap;
-                this.metaMap = data.metaMap;
-                this.containerHeight = data.containerHeight;
-                this.startIndex = data.startIndex;
-                this.endIndex = data.endIndex;
-            } else {
-                // 如果不存在持久化数据
-                // 向metaMap中加入数据
-                let containerHeight = 0;
-                for (let i = 0, len = this.idList.length; i < len; i++) {
-                    const id = '' + this.idList[i];
-                    const height = this.defaultItemHeight + this.defaultItemGap;
-                    Vue.set(this.topMap, id, i * height);
-                    Vue.set(this.metaMap, id, {
-                        height,
-                    });
-                    containerHeight += height;
-                }
-                this.containerHeight = containerHeight;
-            }
-
-            window.addEventListener('scroll', this.scrollCallback);
-        },
-        mounted() {
-            // 完成首次刷新
-            this.$nextTick(() => {
-                this.scrollCallback();
-            });
-        },
-        beforeDestroy() {
-            window.removeEventListener('scroll', this.scrollCallback);
-            // 完成持久化过程
-            if (this.persistence) {
-                this.persistence({
-                    topMap: this.topMap,
-                    metaMap: this.metaMap,
-                    startIndex: this.startIndex,
-                    endIndex: this.endIndex,
-                    containerHeight: this.containerHeight,
+    },
+    created() {
+        let data = null;
+        if (this.load && (data = this.load())) {
+            // 如果存在持久化数据情况下
+            this.topMap = data.topMap;
+            this.metaMap = data.metaMap;
+            this.containerHeight = data.containerHeight;
+            this.startIndex = data.startIndex;
+            this.endIndex = data.endIndex;
+        } else {
+            // 如果不存在持久化数据
+            // 向metaMap中加入数据
+            let containerHeight = 0;
+            for (let i = 0, len = this.idList.length; i < len; i++) {
+                const id = '' + this.idList[i];
+                const height = this.defaultItemHeight + this.defaultItemGap;
+                Vue.set(this.topMap, id, i * height);
+                Vue.set(this.metaMap, id, {
+                    height,
                 });
+                containerHeight += height;
             }
-        },
-        render(h) {
-            const $default = this.$scopedSlots.default;
-            const displayList = $default ? $default({
+            this.containerHeight = containerHeight;
+        }
+
+        window.addEventListener('scroll', this.scrollCallback);
+    },
+    mounted() {
+        // 完成首次刷新
+        this.$nextTick(() => {
+            this.scrollCallback();
+        });
+    },
+    beforeDestroy() {
+        window.removeEventListener('scroll', this.scrollCallback);
+        // 完成持久化过程
+        if (this.persistence) {
+            this.persistence({
+                topMap: this.topMap,
+                metaMap: this.metaMap,
                 startIndex: this.startIndex,
                 endIndex: this.endIndex,
-            }) : [];
-            (displayList || []).forEach((vnode) => {
-                const instance = vnode.componentInstance;
-                const options = vnode.componentOptions;
-                // 依赖于未公开的instance._events，并不是一件好事
-                // @ts-ignore
-                if (instance && !instance._events.heightChange) {
-                    instance.$on('heightChange', this.onHeightChange);
-                } else if (options) {
-                    if (options.listeners) {
-                        // @ts-ignore
-                        options.listeners.heightChange = this.onHeightChange;
+                containerHeight: this.containerHeight,
+            });
+        }
+    },
+    render(h) {
+        const $default = this.$scopedSlots.default;
+        const displayList = $default ? $default({
+            startIndex: this.startIndex,
+            endIndex: this.endIndex,
+        }) : [];
+        (displayList || []).forEach((vnode) => {
+            const instance = vnode.componentInstance;
+            const options = vnode.componentOptions;
+            // 依赖于未公开的instance._events，并不是一件好事
+            // @ts-ignore
+            if (instance && !instance._events.heightChange) {
+                instance.$on('heightChange', this.onHeightChange);
+            } else if (options) {
+                if (options.listeners) {
+                    // @ts-ignore
+                    options.listeners.heightChange = this.onHeightChange;
+                } else {
+                    options.listeners = {
+                        heightChange: this.onHeightChange,
+                    };
+                }
+            } else if (!instance) {
+                if (vnode.data) {
+                    if (vnode.data.on) {
+                        vnode.data.on.heightChange = this.onHeightChange;
                     } else {
-                        options.listeners = {
+                        vnode.data.on = {
                             heightChange: this.onHeightChange,
                         };
                     }
-                } else if (!instance) {
-                    if (vnode.data) {
-                        if (vnode.data.on) {
-                            vnode.data.on.heightChange = this.onHeightChange;
-                        } else {
-                            vnode.data.on = {
-                                heightChange: this.onHeightChange,
-                            };
-                        }
-                    }
                 }
-                // 没有data的话，可能哪里存在问题
-                if (vnode.data) {
-                    const style = vnode.data.style;
-                    const id = vnode.componentOptions.propsData.id;
-                    const top = this.topMap[id] + 'px';
-                    if (!style) {
-                        vnode.data.style = {
-                            top,
-                        };
-                    } else if (typeof style === 'string') {
-                        vnode.data.style = style + `; top: ${top}`;
-                    } else if (isPlainObject(style)) {
-                        vnode.data.style.top = top;
-                    }
+            }
+            // 没有data的话，可能哪里存在问题
+            if (vnode.data) {
+                const style = vnode.data.style;
+                const id = vnode.componentOptions.propsData.id;
+                const top = this.topMap[id] + 'px';
+                if (!style) {
+                    vnode.data.style = {
+                        top,
+                    };
+                } else if (typeof style === 'string') {
+                    vnode.data.style = style + `; top: ${top}`;
+                } else if (isPlainObject(style)) {
+                    vnode.data.style.top = top;
                 }
-            });
+            }
+        });
 
-            return h('div', {
-                class: 'large-list',
-                style: {
-                    height: this.containerHeight + 'px',
-                },
-            }, displayList);
-        },
+        return h('div', {
+            class: 'large-list',
+            style: {
+                height: this.containerHeight + 'px',
+            },
+        }, displayList);
     },
 }
