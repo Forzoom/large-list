@@ -156,7 +156,8 @@ export default {
             const height = this.metaMap[id].height = newHeight + this.defaultItemGap;
             this.containerHeight += (height - oldHeight);
             let transform = false;
-            for (const item of this.displayList) {
+            for (let i = 0, len = this.displayList.length; i < len; i++) {
+                const item = this.displayList[i];
                 if (item.id === id) {
                     transform = true;
                     continue;

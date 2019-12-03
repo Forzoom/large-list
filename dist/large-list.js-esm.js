@@ -205,36 +205,18 @@ var index = {
       var height = this.metaMap[id].height = newHeight + this.defaultItemGap;
       this.containerHeight += height - oldHeight;
       var transform = false;
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
 
-      try {
-        for (var _iterator = this.displayList[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var item = _step.value;
+      for (var i = 0, len = this.displayList.length; i < len; i++) {
+        var item = this.displayList[i];
 
-          if (item.id === id) {
-            transform = true;
-            continue;
-          } // 对接下来的所有元素进行更新
+        if (item.id === id) {
+          transform = true;
+          continue;
+        } // 对接下来的所有元素进行更新
 
 
-          if (transform) {
-            this.topMap[item.id] += height - oldHeight;
-          }
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator["return"] != null) {
-            _iterator["return"]();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
+        if (transform) {
+          this.topMap[item.id] += height - oldHeight;
         }
       }
 
