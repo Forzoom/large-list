@@ -7,6 +7,25 @@ const extensions = [ '.ts', '.js' ];
 
 module.exports = exports = [
     {
+        input: './src/index.js',
+        output: {
+            file: './dist/large-list.js-esm.js',
+            format: 'esm',
+        },
+        external: [ 'core-js', 'vue' ],
+        plugins: [
+            resolve({
+                extensions,
+            }),
+            commonjs(),
+            babel({
+                exclude: 'node_modules/**',
+                extensions,
+            }),
+        ],
+    },
+
+    {
         input: './src/index.ts',
         output: {
             file: './dist/large-list.esm.js',
