@@ -1,3 +1,5 @@
+import Vue from 'vue';
+
 /**
  * 是否是null或者undefined
  *
@@ -237,118 +239,118 @@ var index = {
       }
 
       this.pendingRefresh = true;
-    },
-    created: function created() {
-      var data = null;
+    }
+  },
+  created: function created() {
+    var data = null;
 
-      if (this.load && (data = this.load())) {
-        // 如果存在持久化数据情况下
-        this.topMap = data.topMap;
-        this.metaMap = data.metaMap;
-        this.containerHeight = data.containerHeight;
-        this.startIndex = data.startIndex;
-        this.endIndex = data.endIndex;
-      } else {
-        // 如果不存在持久化数据
-        // 向metaMap中加入数据
-        var containerHeight = 0;
+    if (this.load && (data = this.load())) {
+      // 如果存在持久化数据情况下
+      this.topMap = data.topMap;
+      this.metaMap = data.metaMap;
+      this.containerHeight = data.containerHeight;
+      this.startIndex = data.startIndex;
+      this.endIndex = data.endIndex;
+    } else {
+      // 如果不存在持久化数据
+      // 向metaMap中加入数据
+      var containerHeight = 0;
 
-        for (var i = 0, len = this.idList.length; i < len; i++) {
-          var id = '' + this.idList[i];
-          var height = this.defaultItemHeight + this.defaultItemGap;
-          Vue.set(this.topMap, id, i * height);
-          Vue.set(this.metaMap, id, {
-            height: height
-          });
-          containerHeight += height;
-        }
-
-        this.containerHeight = containerHeight;
-      }
-
-      window.addEventListener('scroll', this.scrollCallback);
-    },
-    mounted: function mounted() {
-      var _this = this;
-
-      // 完成首次刷新
-      this.$nextTick(function () {
-        _this.scrollCallback();
-      });
-    },
-    beforeDestroy: function beforeDestroy() {
-      window.removeEventListener('scroll', this.scrollCallback); // 完成持久化过程
-
-      if (this.persistence) {
-        this.persistence({
-          topMap: this.topMap,
-          metaMap: this.metaMap,
-          startIndex: this.startIndex,
-          endIndex: this.endIndex,
-          containerHeight: this.containerHeight
+      for (var i = 0, len = this.idList.length; i < len; i++) {
+        var id = '' + this.idList[i];
+        var height = this.defaultItemHeight + this.defaultItemGap;
+        Vue.set(this.topMap, id, i * height);
+        Vue.set(this.metaMap, id, {
+          height: height
         });
+        containerHeight += height;
       }
-    },
-    render: function render(h) {
-      var _this2 = this;
 
-      var $default = this.$scopedSlots["default"];
-      var displayList = $default ? $default({
+      this.containerHeight = containerHeight;
+    }
+
+    window.addEventListener('scroll', this.scrollCallback);
+  },
+  mounted: function mounted() {
+    var _this = this;
+
+    // 完成首次刷新
+    this.$nextTick(function () {
+      _this.scrollCallback();
+    });
+  },
+  beforeDestroy: function beforeDestroy() {
+    window.removeEventListener('scroll', this.scrollCallback); // 完成持久化过程
+
+    if (this.persistence) {
+      this.persistence({
+        topMap: this.topMap,
+        metaMap: this.metaMap,
         startIndex: this.startIndex,
-        endIndex: this.endIndex
-      }) : [];
-      (displayList || []).forEach(function (vnode) {
-        var instance = vnode.componentInstance;
-        var options = vnode.componentOptions; // 依赖于未公开的instance._events，并不是一件好事
-        // @ts-ignore
+        endIndex: this.endIndex,
+        containerHeight: this.containerHeight
+      });
+    }
+  },
+  render: function render(h) {
+    var _this2 = this;
 
-        if (instance && !instance._events.heightChange) {
-          instance.$on('heightChange', _this2.onHeightChange);
-        } else if (options) {
-          if (options.listeners) {
-            // @ts-ignore
-            options.listeners.heightChange = _this2.onHeightChange;
+    var $default = this.$scopedSlots["default"];
+    var displayList = $default ? $default({
+      startIndex: this.startIndex,
+      endIndex: this.endIndex
+    }) : [];
+    (displayList || []).forEach(function (vnode) {
+      var instance = vnode.componentInstance;
+      var options = vnode.componentOptions; // 依赖于未公开的instance._events，并不是一件好事
+      // @ts-ignore
+
+      if (instance && !instance._events.heightChange) {
+        instance.$on('heightChange', _this2.onHeightChange);
+      } else if (options) {
+        if (options.listeners) {
+          // @ts-ignore
+          options.listeners.heightChange = _this2.onHeightChange;
+        } else {
+          options.listeners = {
+            heightChange: _this2.onHeightChange
+          };
+        }
+      } else if (!instance) {
+        if (vnode.data) {
+          if (vnode.data.on) {
+            vnode.data.on.heightChange = _this2.onHeightChange;
           } else {
-            options.listeners = {
+            vnode.data.on = {
               heightChange: _this2.onHeightChange
             };
           }
-        } else if (!instance) {
-          if (vnode.data) {
-            if (vnode.data.on) {
-              vnode.data.on.heightChange = _this2.onHeightChange;
-            } else {
-              vnode.data.on = {
-                heightChange: _this2.onHeightChange
-              };
-            }
-          }
-        } // 没有data的话，可能哪里存在问题
-
-
-        if (vnode.data) {
-          var style = vnode.data.style;
-          var id = vnode.componentOptions.propsData.id;
-          var top = _this2.topMap[id] + 'px';
-
-          if (!style) {
-            vnode.data.style = {
-              top: top
-            };
-          } else if (typeof style === 'string') {
-            vnode.data.style = style + "; top: ".concat(top);
-          } else if (isPlainObject(style)) {
-            vnode.data.style.top = top;
-          }
         }
-      });
-      return h('div', {
-        "class": 'large-list',
-        style: {
-          height: this.containerHeight + 'px'
+      } // 没有data的话，可能哪里存在问题
+
+
+      if (vnode.data) {
+        var style = vnode.data.style;
+        var id = vnode.componentOptions.propsData.id;
+        var top = _this2.topMap[id] + 'px';
+
+        if (!style) {
+          vnode.data.style = {
+            top: top
+          };
+        } else if (typeof style === 'string') {
+          vnode.data.style = style + "; top: ".concat(top);
+        } else if (isPlainObject(style)) {
+          vnode.data.style.top = top;
         }
-      }, displayList);
-    }
+      }
+    });
+    return h('div', {
+      "class": 'large-list',
+      style: {
+        height: this.containerHeight + 'px'
+      }
+    }, displayList);
   }
 };
 
