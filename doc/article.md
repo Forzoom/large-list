@@ -1,3 +1,5 @@
+> 文章以及代码存放于[Github](https://github.com/Forzoom/large-list)。
+
 今天所实现的组件我称为“超长列表”，列表是当前互联网产品中常见的组织/展现数据的一种形式，随着数据量不断变得庞大，我们会对数据进行分页，但是目前庞大的数据以及愈加丰富的内容，让我们的设备在维持大量数据时，性能上的瓶颈渐渐显示出来，我们的网页在滑动时可能会出现卡顿，这是这个组件所需要处理的问题。
 
 在iOS开发中有名为UITableView的组件，在android开发中有被称为ListView的组件，它们通过销毁不可见区域的元素，来达到性能优化的目的，我们在组件当中也采用这样的逻辑，即便列表中有10000个元素，当屏幕可视区域中可能只有5个元素，那么我们只显示5个元素，这将大大减少我们的网页对于硬件资源的消耗。
@@ -203,7 +205,9 @@ export default {
 1. 子元素样式改变，例如top位置的改变
 2. 子元素的height-change事件监听
 
-这是使用模板所无法做到的事情，需要使用更加灵活的render函数来实现。
+这是使用模板（template字段）所无法做到的事情，需要使用更加灵活的render函数来实现。
+
+ps: 这里实现的render函数使用了官方文档中没有的内容，仅供参考。
 
 ```javascript
 {
@@ -265,6 +269,88 @@ export default {
           height: this.containerHeight + 'px',
       },
     }, displayList);
+  },
+  // ...
+}
+```
+
+## 优化: 完善细节表现
+
+### 预先加载部分子元素
+
+目前的逻辑是：当子元素进入可视区域内，再开始渲染元素。这种逻辑下，假如设备性能不佳，用户可能会有子元素“突然出现”的感觉。为了减轻这个问题的影响，在滑动过程中，不论向上还是向下滑动，都需要多渲染几个元素，通过修改`scrollCallback`函数的逻辑能够很方便地实现这个功能。
+
+```javascript
+{
+  // ...
+  props: {
+    // 需要预先加载的高度
+    preloadHeight: {
+      type: Number,
+      default: 100,
+    },
+  },
+  methods: {
+    scrollCallback() {
+      const top = window.scrollY - this.preloadHeight;
+      const bottom = window.scrollY + window.innerHeight + this.preloadHeight;
+      this.startIndex = top < 0 ? 0 : this.binarySearch(top);
+      this.endIndex = bottom < 0 ? 0 : this.binarySearch(bottom) + 1;
+    },
+  },
+  // ...
+}
+```
+
+### 解决metaMap中数据丢失的问题
+
+组件中的子元素显示位置全依赖于`metaMap`中的数据，当用户离开有`<LargeList>`的页面，`<LargeList>`被销毁时`metaMap`中也就丢失了，当用户再次回来时，`<LargeList>`遇到的第一个问题：需要额外消耗性能来重新处理子元素的高度变化。更严重的问题是：一般返回上一页时，会将页面滚动区域固定在离开时的位置，此时因为没有原本的`metaMap`数据，所以渲染的结果与用户离开时所看到的内容可能不符。所能想到解决问题最简单的做法就是：当用户离开页面将`metaMap`保存下来。
+
+`<LargeList>`对外提供两个prop: `persistence`和`load`，分别接收一个函数，用于存储数据和加载数据，具体数据存储和加载的方式，将由外层组件决定，这提供更好的灵活性。
+
+```javascript
+{
+  // ...
+  props: {
+    /** 持久化 */
+    persistence: {},
+    /** 加载数据 */
+    load: {},
+  },
+  created() {
+    let data = null;
+    if (this.load && (data = this.load())) {
+      // 如果存在持久化数据情况下
+      this.metaMap = data.metaMap;
+      this.containerHeight = data.containerHeight;
+      this.startIndex = data.startIndex;
+      this.endIndex = data.endIndex;
+    } else {
+      // 如果不存在持久化数据
+      // 向metaMap中加入数据
+      let containerHeight = 0;
+      for (let i = 0, len = this.idList.length; i < len; i++) {
+        const id = '' + this.idList[i];
+        const height = this.defaultItemHeight + this.defaultItemGap;
+        Vue.set(this.metaMap, id, {
+          top: i * height,
+          height,
+        });
+        containerHeight += height;
+      }
+      this.containerHeight = containerHeight;
+    }
+  },
+  beforeDestroy() {
+    // 完成持久化过程
+    if (this.persistence) {
+      this.persistence({
+        metaMap: this.metaMap,
+        startIndex: this.startIndex,
+        endIndex: this.endIndex,
+        containerHeight: this.containerHeight,
+      });
+    }
   },
   // ...
 }
