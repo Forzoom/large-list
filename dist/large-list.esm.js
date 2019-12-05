@@ -456,7 +456,7 @@ function isType(name) {
 }
 var isPlainObject = isType('Object');
 
-var _dec, _dec2, _dec3, _dec4, _dec5, _dec6, _dec7, _dec8, _class, _class2, _descriptor, _descriptor2, _descriptor3, _descriptor4, _descriptor5, _temp;
+var _dec, _dec2, _dec3, _dec4, _dec5, _dec6, _dec7, _dec8, _dec9, _class, _class2, _descriptor, _descriptor2, _descriptor3, _descriptor4, _descriptor5, _descriptor6, _temp;
 // 跳跃表是否是可以无限扩展的?
 // 二分查找是否足够快?
 // 需要考虑是使用内部scroll的形式，还是让container占据body来scroll
@@ -477,7 +477,10 @@ var LargeListComponent = (_dec = Component({
 }), _dec4 = Prop({
   type: Number,
   "default": 10
-}), _dec5 = Prop(), _dec6 = Prop(), _dec7 = Watch('$props.list'), _dec8 = Watch('endIndex'), _dec(_class = (_class2 = (_temp =
+}), _dec5 = Prop({
+  type: Number,
+  "default": 200
+}), _dec6 = Prop(), _dec7 = Prop(), _dec8 = Watch('$props.list'), _dec9 = Watch('endIndex'), _dec(_class = (_class2 = (_temp =
 /*#__PURE__*/
 function (_Vue) {
   _inherits(LargeListComponent, _Vue);
@@ -501,11 +504,11 @@ function (_Vue) {
 
     _initializerDefineProperty(_assertThisInitialized(_this), "defaultItemGap", _descriptor3, _assertThisInitialized(_this));
 
-    _initializerDefineProperty(_assertThisInitialized(_this), "persistence", _descriptor4, _assertThisInitialized(_this));
+    _initializerDefineProperty(_assertThisInitialized(_this), "preloadHeight", _descriptor4, _assertThisInitialized(_this));
 
-    _initializerDefineProperty(_assertThisInitialized(_this), "load", _descriptor5, _assertThisInitialized(_this));
+    _initializerDefineProperty(_assertThisInitialized(_this), "persistence", _descriptor5, _assertThisInitialized(_this));
 
-    _defineProperty(_assertThisInitialized(_this), "topMap", {});
+    _initializerDefineProperty(_assertThisInitialized(_this), "load", _descriptor6, _assertThisInitialized(_this));
 
     _defineProperty(_assertThisInitialized(_this), "metaMap", {});
 
@@ -530,15 +533,15 @@ function (_Vue) {
       for (var i = 0, len = val.length; i < len; i++) {
         var id = this.idList[i];
 
-        if (isUndef(this.topMap[id])) {
+        if (isUndef(this.metaMap[id])) {
           var prevId = this.idList[i - 1];
 
           if (!prevId) {
             continue;
           }
 
-          Vue.set(this.topMap, '' + id, this.topMap[prevId] + this.metaMap[prevId].height);
           Vue.set(this.metaMap, '' + id, {
+            top: this.metaMap[prevId].top + this.metaMap[prevId].height,
             height: height
           });
           this.containerHeight += height;
@@ -565,7 +568,7 @@ function (_Vue) {
 
 
         var id = this.idList[i];
-        this.topMap[id] = this.topMap[prevId] + this.metaMap[prevId].height;
+        this.metaMap[id].top = this.metaMap[prevId].top + this.metaMap[prevId].height;
       }
     }
     /**
@@ -585,12 +588,13 @@ function (_Vue) {
   }, {
     key: "refresh",
     value: function refresh(top) {
-      this.startIndex = top < 0 ? 0 : this.binarySearch(top).index;
-      this.endIndex = top + window.innerHeight < 0 ? 0 : this.binarySearch(top + window.innerHeight).index + 1;
+      var bottom = top + window.innerHeight + this.preloadHeight;
+      top -= this.preloadHeight;
+      this.startIndex = top < 0 ? 0 : this.binarySearch(top);
+      this.endIndex = bottom < 0 ? 0 : this.binarySearch(bottom) + 1;
     }
     /**
      * 二分搜索
-     * pivot没有办法达到-1
      */
 
   }, {
@@ -598,11 +602,8 @@ function (_Vue) {
     value: function binarySearch(targetTop) {
       var finalId = this.idList[this.idList.length - 1];
 
-      if (targetTop > this.topMap[finalId]) {
-        return {
-          id: finalId,
-          index: this.idList.length - 1
-        };
+      if (targetTop > this.metaMap[finalId].top) {
+        return this.idList.length - 1;
       }
 
       var start = 0; // 前方下标
@@ -613,13 +614,10 @@ function (_Vue) {
 
       while (start + 1 < end) {
         var id = this.idList[pivot];
-        var pivotTop = this.topMap[id]; // 找到
+        var pivotTop = this.metaMap[id].top; // 找到
 
         if (pivotTop === targetTop) {
-          return {
-            id: id,
-            index: pivot
-          };
+          return pivot;
         } else if (pivotTop < targetTop) {
           start = pivot;
         } else {
@@ -629,10 +627,7 @@ function (_Vue) {
         pivot = Math.floor((start + end) / 2); // 中间下标
       }
 
-      return {
-        id: this.idList[pivot],
-        index: pivot
-      };
+      return pivot;
     }
     /**
      * 图片加载完成
@@ -660,7 +655,7 @@ function (_Vue) {
 
 
           if (transform) {
-            this.topMap[item.id] += height - oldHeight;
+            this.metaMap[item.id].top += height - oldHeight;
           }
         }
       } catch (err) {
@@ -687,7 +682,6 @@ function (_Vue) {
 
       if (this.load && (data = this.load())) {
         // 如果存在持久化数据情况下
-        this.topMap = data.topMap;
         this.metaMap = data.metaMap;
         this.containerHeight = data.containerHeight;
         this.startIndex = data.startIndex;
@@ -700,8 +694,8 @@ function (_Vue) {
         for (var i = 0, len = this.idList.length; i < len; i++) {
           var id = '' + this.idList[i];
           var height = this.defaultItemHeight + this.defaultItemGap;
-          Vue.set(this.topMap, id, i * height);
           Vue.set(this.metaMap, id, {
+            top: i * height,
             height: height
           });
           containerHeight += height;
@@ -729,7 +723,6 @@ function (_Vue) {
 
       if (this.persistence) {
         this.persistence({
-          topMap: this.topMap,
           metaMap: this.metaMap,
           startIndex: this.startIndex,
           endIndex: this.endIndex,
@@ -780,7 +773,7 @@ function (_Vue) {
           var style = vnode.data.style; // @ts-ignore
 
           var id = vnode.componentOptions.propsData.id;
-          var top = _this3.topMap[id] + 'px';
+          var top = _this3.metaMap[id].top + 'px';
 
           if (!style) {
             vnode.data.style = {
@@ -835,16 +828,21 @@ function (_Vue) {
   enumerable: true,
   writable: true,
   initializer: null
-}), _descriptor4 = _applyDecoratedDescriptor(_class2.prototype, "persistence", [_dec5], {
+}), _descriptor4 = _applyDecoratedDescriptor(_class2.prototype, "preloadHeight", [_dec5], {
   configurable: true,
   enumerable: true,
   writable: true,
   initializer: null
-}), _descriptor5 = _applyDecoratedDescriptor(_class2.prototype, "load", [_dec6], {
+}), _descriptor5 = _applyDecoratedDescriptor(_class2.prototype, "persistence", [_dec6], {
   configurable: true,
   enumerable: true,
   writable: true,
   initializer: null
-}), _applyDecoratedDescriptor(_class2.prototype, "onListChange", [_dec7], Object.getOwnPropertyDescriptor(_class2.prototype, "onListChange"), _class2.prototype), _applyDecoratedDescriptor(_class2.prototype, "onEndIndexChange", [_dec8], Object.getOwnPropertyDescriptor(_class2.prototype, "onEndIndexChange"), _class2.prototype)), _class2)) || _class);
+}), _descriptor6 = _applyDecoratedDescriptor(_class2.prototype, "load", [_dec7], {
+  configurable: true,
+  enumerable: true,
+  writable: true,
+  initializer: null
+}), _applyDecoratedDescriptor(_class2.prototype, "onListChange", [_dec8], Object.getOwnPropertyDescriptor(_class2.prototype, "onListChange"), _class2.prototype), _applyDecoratedDescriptor(_class2.prototype, "onEndIndexChange", [_dec9], Object.getOwnPropertyDescriptor(_class2.prototype, "onEndIndexChange"), _class2.prototype)), _class2)) || _class);
 
 export default LargeListComponent;

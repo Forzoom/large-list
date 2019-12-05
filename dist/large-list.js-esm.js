@@ -59,9 +59,6 @@ var index = {
   },
   data: function data() {
     return {
-      /** 存储无限加载所需要使用的高度信息 */
-      topMap: {},
-
       /** 存储无限加载所需要使用的原始信息 */
       metaMap: {},
 
@@ -99,15 +96,15 @@ var index = {
       for (var i = 0, len = val.length; i < len; i++) {
         var id = this.idList[i];
 
-        if (isUndef(this.topMap[id])) {
+        if (isUndef(this.metaMap[id].top)) {
           var prevId = this.idList[i - 1];
 
           if (!prevId) {
             continue;
           }
 
-          Vue.set(this.topMap, '' + id, this.topMap[prevId] + this.metaMap[prevId].height);
           Vue.set(this.metaMap, '' + id, {
+            top: this.metaMap[prevId].top + this.metaMap[prevId].height,
             height: height
           });
           this.containerHeight += height;
@@ -132,7 +129,7 @@ var index = {
 
 
         var id = this.idList[i];
-        this.topMap[id] = this.topMap[prevId] + this.metaMap[prevId].height;
+        this.metaMap[id].top = this.metaMap[prevId].top + this.metaMap[prevId].height;
       }
     }
   },
@@ -160,7 +157,7 @@ var index = {
     binarySearch: function binarySearch(targetTop) {
       var finalId = this.idList[this.idList.length - 1];
 
-      if (targetTop > this.topMap[finalId]) {
+      if (targetTop > this.metaMap[finalId].top) {
         return {
           id: finalId,
           index: this.idList.length - 1
@@ -175,7 +172,7 @@ var index = {
 
       while (start + 1 < end) {
         var id = this.idList[pivot];
-        var pivotTop = this.topMap[id]; // 找到
+        var pivotTop = this.metaMap[id].top; // 找到
 
         if (pivotTop === targetTop) {
           return {
@@ -216,7 +213,7 @@ var index = {
 
 
         if (transform) {
-          this.topMap[item.id] += height - oldHeight;
+          this.metaMap[item.id].top += height - oldHeight;
         }
       }
 
@@ -228,7 +225,6 @@ var index = {
 
     if (this.load && (data = this.load())) {
       // 如果存在持久化数据情况下
-      this.topMap = data.topMap;
       this.metaMap = data.metaMap;
       this.containerHeight = data.containerHeight;
       this.startIndex = data.startIndex;
@@ -241,8 +237,8 @@ var index = {
       for (var i = 0, len = this.idList.length; i < len; i++) {
         var id = '' + this.idList[i];
         var height = this.defaultItemHeight + this.defaultItemGap;
-        Vue.set(this.topMap, id, i * height);
         Vue.set(this.metaMap, id, {
+          top: i * height,
           height: height
         });
         containerHeight += height;
@@ -266,7 +262,6 @@ var index = {
 
     if (this.persistence) {
       this.persistence({
-        topMap: this.topMap,
         metaMap: this.metaMap,
         startIndex: this.startIndex,
         endIndex: this.endIndex,
@@ -314,7 +309,7 @@ var index = {
       if (vnode.data) {
         var style = vnode.data.style;
         var id = vnode.componentOptions.propsData.id;
-        var top = _this2.topMap[id] + 'px';
+        var top = _this2.metaMap[id].top + 'px';
 
         if (!style) {
           vnode.data.style = {

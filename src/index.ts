@@ -19,13 +19,13 @@ export default class LargeListComponent extends Vue {
     @Prop({ type: Number, default: 200 }) public defaultItemHeight!: number;
     /** 默认条目之间的间隔 */
     @Prop({ type: Number, default: 10 }) public defaultItemGap!: number;
+    /** 预先检测的高度 */
+    @Prop({ type: Number, default: 200 }) public preloadHeight!: number;
     /** 持久化 */
     @Prop() public persistence!: any;
     /** 加载数据 */
     @Prop() public load!: any;
 
-    /** 存储无限加载所需要使用的高度信息 */
-    public topMap: LargeList.TopMap = {};
     /** 存储无限加载所需要使用的原始信息 */
     public metaMap: LargeList.MetaMap = {};
     /** 开始显示内容 */
@@ -53,13 +53,13 @@ export default class LargeListComponent extends Vue {
         // 需要处理之前没有的数据
         for (let i = 0, len = val.length; i < len; i++) {
             const id = this.idList[i];
-            if (isUndef(this.topMap[id])) {
+            if (isUndef(this.metaMap[id])) {
                 const prevId = this.idList[i - 1];
                 if (!prevId) {
                     continue;
                 }
-                Vue.set(this.topMap, '' + id, this.topMap[prevId] + this.metaMap[prevId].height);
                 Vue.set(this.metaMap, '' + id, {
+                    top: this.metaMap[prevId].top + this.metaMap[prevId].height,
                     height,
                 });
                 this.containerHeight += height;
@@ -82,7 +82,7 @@ export default class LargeListComponent extends Vue {
             }
             // 需要更新的内容，主要是top
             const id = this.idList[i];
-            this.topMap[id] = this.topMap[prevId] + this.metaMap[prevId].height;
+            this.metaMap[id].top = this.metaMap[prevId].top + this.metaMap[prevId].height;
         }
     }
 
@@ -97,34 +97,29 @@ export default class LargeListComponent extends Vue {
      * 刷新数据
      */
     public refresh(top: number) {
-        this.startIndex = top < 0 ? 0 : this.binarySearch(top).index;
-        this.endIndex = (top + window.innerHeight < 0) ? 0 : this.binarySearch(top + window.innerHeight).index + 1;
+        const bottom = top + window.innerHeight + this.preloadHeight;
+        top -= this.preloadHeight;
+        this.startIndex = top < 0 ? 0 : this.binarySearch(top);
+        this.endIndex = bottom < 0 ? 0 : this.binarySearch(bottom) + 1;
     }
     /**
      * 二分搜索
-     * pivot没有办法达到-1
      */
     public binarySearch(targetTop: number) {
         const finalId = this.idList[this.idList.length - 1];
-        if (targetTop > this.topMap[finalId]) {
-            return {
-                id: finalId,
-                index: this.idList.length - 1,
-            };
+        if (targetTop > this.metaMap[finalId].top) {
+            return this.idList.length - 1;
         }
         let start = 0; // 前方下标
         let end = this.idList.length - 1; // 后方下标
         let pivot = Math.floor((start + end) / 2);
         while (start + 1 < end) {
             const id = this.idList[pivot];
-            const pivotTop = this.topMap[id];
+            const pivotTop = this.metaMap[id].top;
 
             // 找到
             if (pivotTop === targetTop) {
-                return {
-                    id,
-                    index: pivot,
-                };
+                return pivot;
             } else if (pivotTop < targetTop) {
                 start = pivot;
             } else {
@@ -132,10 +127,7 @@ export default class LargeListComponent extends Vue {
             }
             pivot = Math.floor((start + end) / 2); // 中间下标
         }
-        return {
-            id: this.idList[pivot],
-            index: pivot,
-        };
+        return pivot;
     }
     /**
      * 图片加载完成
@@ -153,7 +145,7 @@ export default class LargeListComponent extends Vue {
 
             // 对接下来的所有元素进行更新
             if (transform) {
-                this.topMap[item.id] += (height - oldHeight);
+                this.metaMap[item.id].top += (height - oldHeight);
             }
         }
 
@@ -164,7 +156,6 @@ export default class LargeListComponent extends Vue {
         let data: any = null;
         if (this.load && (data = this.load())) {
             // 如果存在持久化数据情况下
-            this.topMap = data.topMap;
             this.metaMap = data.metaMap;
             this.containerHeight = data.containerHeight;
             this.startIndex = data.startIndex;
@@ -176,8 +167,8 @@ export default class LargeListComponent extends Vue {
             for (let i = 0, len = this.idList.length; i < len; i++) {
                 const id = '' + this.idList[i];
                 const height = this.defaultItemHeight + this.defaultItemGap;
-                Vue.set(this.topMap, id, i * height);
                 Vue.set(this.metaMap, id, {
+                    top: i * height,
                     height,
                 });
                 containerHeight += height;
@@ -198,7 +189,6 @@ export default class LargeListComponent extends Vue {
         // 完成持久化过程
         if (this.persistence) {
             this.persistence({
-                topMap: this.topMap,
                 metaMap: this.metaMap,
                 startIndex: this.startIndex,
                 endIndex: this.endIndex,
@@ -245,7 +235,7 @@ export default class LargeListComponent extends Vue {
                 const style = vnode.data.style;
                 // @ts-ignore
                 const id = vnode.componentOptions!.propsData!.id;
-                const top = this.topMap[id] + 'px';
+                const top = this.metaMap[id].top + 'px';
                 if (!style) {
                     vnode.data.style = {
                         top,
