@@ -1,6 +1,6 @@
 > 文章以及代码存放于[Github](https://github.com/Forzoom/large-list)。
 
-今天所实现的组件我称为“超长列表”，列表是当前互联网产品中常见的组织/展现数据的一种形式，随着数据量不断变得庞大，我们会对数据进行分页，但是目前庞大的数据以及愈加丰富的内容，让我们的设备在维持大量数据时，性能上的瓶颈渐渐显示出来，我们的网页在滑动时可能会出现卡顿，这是这个组件所需要处理的问题。
+列表是当前互联网产品中常见的组织/展现数据的一种形式，随着数据量不断变得庞大，我们会对数据进行分页，但是目前庞大的数据以及愈加丰富的内容，让我们的设备在维持大量数据时，性能上的瓶颈渐渐显示出来，我们的网页在滑动时可能会出现卡顿，这是这个组件所需要处理的问题。
 
 在iOS开发中有名为UITableView的组件，在android开发中有被称为ListView的组件，它们通过销毁不可见区域的元素，来达到性能优化的目的，我们在组件当中也采用这样的逻辑，即便列表中有10000个元素，当屏幕可视区域中可能只有5个元素，那么我们只显示5个元素，这将大大减少我们的网页对于硬件资源的消耗。
 
@@ -26,7 +26,7 @@ export default {
 };
 ```
 
-先来考虑最简单的情况，假设所有的`<PostCard>`的高度都是100，来实现上面所说的效果。list数组依然包含所有的数据，但我们需要另外一个数组，决定需要展示哪些数据。
+先来考虑最简单的情况，假设所有的`<PostCard>`的高度都是100px，来实现上面所说的效果。list数组依然包含所有的元素数据，但我们需要另外一个数组，决定需要渲染list中的哪些元素。
 
 ```javascript
 {
@@ -57,7 +57,6 @@ export default {
 现在我们要想办法确定`startIndex`和`endIndex`，`startIndex`是可视列表(displayList)中的第一个元素的下标，endIndex是最后一个元素的下标+1，在固定高度的情况下，`startIndex`和`endIndex`的计算十分简单
 
 ```javascript
-// 首先我们为LargeList添加scroll事件的监听
 {
   // ...
   created() {
@@ -70,10 +69,12 @@ export default {
 }
 ```
 ```javascript
-// 添加scroll处理函数 scrollCallback
 {
   // ...
   methods: {
+    /**
+     * scroll事件处理函数，计算startIndex和endIndex
+     */
     scrollCallback() {
       this.startIndex = Math.floor(window.scrollY / 100);
       this.endIndex = Math.floor((window.scrollY + window.innerHeight) / 100) + 1;
@@ -302,9 +303,11 @@ ps: 这里实现的render函数使用了官方文档中没有的内容，仅供�
 }
 ```
 
-### 解决metaMap中数据丢失的问题
+### 解决metaMap数据丢失的问题
 
-组件中的子元素显示位置全依赖于`metaMap`中的数据，当用户离开有`<LargeList>`的页面，`<LargeList>`被销毁时`metaMap`中也就丢失了，当用户再次回来时，`<LargeList>`遇到的第一个问题：需要额外消耗性能来重新处理子元素的高度变化。更严重的问题是：一般返回上一页时，会将页面滚动区域固定在离开时的位置，此时因为没有原本的`metaMap`数据，所以渲染的结果与用户离开时所看到的内容可能不符。所能想到解决问题最简单的做法就是：当用户离开页面将`metaMap`保存下来。
+组件中的子元素显示位置全依赖于`metaMap`中的数据，当用户离开有`<LargeList>`的页面A，跳转到页面B，之后再返回A。`<LargeList>`随着A到B的过程中被销毁了，其中`metaMap`数据也就丢失了。
+
+当用户从B回A时，遇到的一个问题是：需要额外消耗性能来重新处理子元素的高度变化。更主要的问题是：一般回到页面A时，会将页面A滚动到离开时的位置，此时因为没有原本的`metaMap`数据，所以渲染的结果与用户离开时所看到的内容可能不符。所能想到解决问题最简单的做法就是：当用户离开页面将`metaMap`保存下来。
 
 `<LargeList>`对外提供两个prop: `persistence`和`load`，分别接收一个函数，用于存储数据和加载数据，具体数据存储和加载的方式，将由外层组件决定，这提供更好的灵活性。
 
@@ -331,7 +334,7 @@ ps: 这里实现的render函数使用了官方文档中没有的内容，仅供�
       let containerHeight = 0;
       for (let i = 0, len = this.idList.length; i < len; i++) {
         const id = '' + this.idList[i];
-        const height = this.defaultItemHeight + this.defaultItemGap;
+        const height = this.defaultItemHeight;
         Vue.set(this.metaMap, id, {
           top: i * height,
           height,
