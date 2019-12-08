@@ -245,10 +245,10 @@ ps: 这里实现的render函数使用了官方文档中没有的内容，仅供�
           }
         }
       }
-      // 没有data的话，可能哪里存在问题
+      // todo: 没有data的话，可能哪里存在问题
       if (vnode.data) {
         const style = vnode.data.style;
-        // @ts-ignore
+        // 获取props中的id
         const id = vnode.componentOptions!.propsData!.id;
         const top = this.topMap[id] + 'px';
         if (!style) {
@@ -258,7 +258,6 @@ ps: 这里实现的render函数使用了官方文档中没有的内容，仅供�
         } else if (typeof style === 'string') {
           vnode.data.style = style + `; top: ${top}`;
         } else if (isPlainObject(style)) {
-          // @ts-ignore
           vnode.data.style.top = top;
         }
       }
@@ -356,5 +355,42 @@ ps: 这里实现的render函数使用了官方文档中没有的内容，仅供�
     }
   },
   // ...
+}
+```
+
+### 为什么在子元素的实现中要传入名为id的prop
+
+`<LargeList>`的slot中的子元素，要求接收一个名为id的prop，示例：
+
+```javascript
+export default {
+  // ...
+  props: {
+    id: {
+      required: true,
+    },
+  },
+  // ...
+}
+```
+
+这样做是因为，在render函数中需要获取子元素在`metaMap`中所对应的数据，但又没有很好的实现方式，如果有更好的实现方式的话，欢迎交流。
+
+```javascript
+// render函数中的部分代码
+if (vnode.data) {
+  const style = vnode.data.style;
+  // 获取props中的id
+  const id = vnode.componentOptions!.propsData!.id;
+  const top = this.topMap[id] + 'px';
+  if (!style) {
+    vnode.data.style = {
+      top,
+    };
+  } else if (typeof style === 'string') {
+    vnode.data.style = style + `; top: ${top}`;
+  } else if (isPlainObject(style)) {
+    vnode.data.style.top = top;
+  }
 }
 ```
