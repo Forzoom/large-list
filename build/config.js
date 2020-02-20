@@ -9,7 +9,7 @@ module.exports = exports = [
     {
         input: './src/index.js',
         output: {
-            file: './dist/large-list.js-esm.js',
+            file: './dist/large-list.esm.js',
             format: 'esm',
         },
         external: [ 'core-js', 'vue' ],
@@ -26,25 +26,7 @@ module.exports = exports = [
     },
 
     {
-        input: './src/index.ts',
-        output: {
-            file: './dist/large-list.esm.js',
-            format: 'esm',
-        },
-        external: [ 'core-js', 'vue' ],
-        plugins: [
-            resolve({
-                extensions,
-            }),
-            commonjs(),
-            babel({
-                exclude: 'node_modules/**',
-                extensions,
-            }),
-        ],
-    },
-    {
-        input: './src/index.ts',
+        input: './src/index.js',
         output: {
             file: './dist/large-list.cjs.js',
             format: 'cjs',
@@ -62,7 +44,7 @@ module.exports = exports = [
         ],
     },
     {
-        input: './src/index.ts',
+        input: './src/index.js',
         output: {
             file: './dist/large-list.js',
             name: 'LargeList',
@@ -81,7 +63,7 @@ module.exports = exports = [
         ],
     },
     {
-        input: './src/index.ts',
+        input: './src/index.js',
         output: {
             file: './dist/large-list.min.js',
             name: 'LargeList',

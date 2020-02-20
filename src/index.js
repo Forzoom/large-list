@@ -1,69 +1,68 @@
-import Vue from 'vue';
+import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
 import { isUndef, isPlainObject } from './utils';
 
-// 在滚动完成后，如何确认当前应该显示的内容，需要一个跳跃表，跳跃表实际上是二分的逻辑，实时使用二分和使用跳跃表有什么区别吗？
-// 跳跃表是否是可以无限扩展的?
-// 二分查找是否足够快?
-// 需要考虑是使用内部scroll的形式，还是让container占据body来scroll
-// 当height更新的时候，所有的top进行更新是不可能的
-// 大量的new Image是否会导致内存占用
-// 因为对于ios来说，视频在没有点击的情况下并不会被触发，但是大量的创建视频元素也并不是一个好的做法
-
 export default {
-    name: 'LargeList',
+    name: "LargeList",
+
     props: {
         /** 全部数据列表 */
-        list: {
-            type: Array,
-            default() { return []; }
-        },
+        list: { type: Array, default() { return []; } },
+
         /** 未加载条目的默认高度 */
-        defaultItemHeight: {
-            type: Number,
-            default: 200,
-        },
+        defaultItemHeight: { type: Number, default: 200 },
+
         /** 默认条目之间的间隔 */
-        defaultItemGap: {
-            type: Number,
-            default: 10,
-        },
+        defaultItemGap: { type: Number, default: 10 },
+
+        /** 预先检测的高度 */
+        preloadHeight: { type: Number, default: 200 },
+
         /** 持久化 */
         persistence: {},
+
         /** 加载数据 */
-        load: {},
+        load: {}
     },
-    data() {
+
+    data: function data() {
         return {
             /** 存储无限加载所需要使用的原始信息 */
             metaMap: {},
+
             /** 开始显示内容 */
             startIndex: 0,
+
             /** 结束显示内容 */
             endIndex: 0,
+
             /** 容器高度 */
             containerHeight: 0,
+
             /** 需要从这个index进行刷新数据 */
-            pendingRefresh: false,
+            pendingRefresh: false
         };
     },
+
     computed: {
         /** id列表 */
-        idList() {
+        idList: function() {
             return this.list.map((item) => item.id);
         },
+
         /** 所展示的条目列表 */
-        displayList() {
+        displayList: function() {
             return this.list.slice(this.startIndex, this.endIndex);
-        },
+        }
     },
+
     watch: {
         /** 当list发生更新 */
-        '$props.list'(val) {
+        "$props.list": function(val) {
             const height = this.defaultItemHeight + this.defaultItemGap;
             // 需要处理之前没有的数据
             for (let i = 0, len = val.length; i < len; i++) {
                 const id = this.idList[i];
-                if (isUndef(this.metaMap[id].top)) {
+                if (isUndef(this.metaMap[id])) {
                     const prevId = this.idList[i - 1];
                     if (!prevId) {
                         continue;
@@ -76,8 +75,9 @@ export default {
                 }
             }
         },
+
         /** 当index发生更新 */
-        endIndex(newEnd, oldEnd) {
+        endIndex: function(newEnd, oldEnd) {
             if (!this.pendingRefresh) {
                 return;
             }
@@ -94,32 +94,33 @@ export default {
             }
         }
     },
+
     methods: {
         /**
          * 滚动监听
          */
-        scrollCallback() {
+        scrollCallback: function() {
             const $el = this.$el;
             this.refresh(window.scrollY - ($el ? $el.offsetTop : 0));
         },
+
         /**
          * 刷新数据
          */
-        refresh(top) {
-            this.startIndex = top < 0 ? 0 : this.binarySearch(top).index;
-            this.endIndex = (top + window.innerHeight < 0) ? 0 : this.binarySearch(top + window.innerHeight).index + 1;
+        refresh: function(top) {
+            const bottom = top + window.innerHeight + this.preloadHeight;
+            top -= this.preloadHeight;
+            this.startIndex = top < 0 ? 0 : this.binarySearch(top);
+            this.endIndex = bottom < 0 ? 0 : this.binarySearch(bottom) + 1;
         },
+
         /**
          * 二分搜索
-         * pivot没有办法达到-1
          */
-        binarySearch(targetTop) {
+        binarySearch: function(targetTop) {
             const finalId = this.idList[this.idList.length - 1];
             if (targetTop > this.metaMap[finalId].top) {
-                return {
-                    id: finalId,
-                    index: this.idList.length - 1,
-                };
+                return this.idList.length - 1;
             }
             let start = 0; // 前方下标
             let end = this.idList.length - 1; // 后方下标
@@ -130,10 +131,7 @@ export default {
 
                 // 找到
                 if (pivotTop === targetTop) {
-                    return {
-                        id,
-                        index: pivot,
-                    };
+                    return pivot;
                 } else if (pivotTop < targetTop) {
                     start = pivot;
                 } else {
@@ -141,21 +139,18 @@ export default {
                 }
                 pivot = Math.floor((start + end) / 2); // 中间下标
             }
-            return {
-                id: this.idList[pivot],
-                index: pivot,
-            };
+            return pivot;
         },
+
         /**
          * 图片加载完成
          */
-        onHeightChange(newHeight, id) {
+        onHeightChange: function(newHeight, id) {
             const oldHeight = this.metaMap[id].height;
             const height = this.metaMap[id].height = newHeight + this.defaultItemGap;
             this.containerHeight += (height - oldHeight);
             let transform = false;
-            for (let i = 0, len = this.displayList.length; i < len; i++) {
-                const item = this.displayList[i];
+            for (const item of this.displayList) {
                 if (item.id === id) {
                     transform = true;
                     continue;
@@ -168,9 +163,10 @@ export default {
             }
 
             this.pendingRefresh = true;
-        },
+        }
     },
-    created() {
+
+    created: function() {
         let data = null;
         if (this.load && (data = this.load())) {
             // 如果存在持久化数据情况下
@@ -196,13 +192,15 @@ export default {
 
         window.addEventListener('scroll', this.scrollCallback);
     },
-    mounted() {
+
+    mounted: function() {
         // 完成首次刷新
         this.$nextTick(() => {
             this.scrollCallback();
         });
     },
-    beforeDestroy() {
+
+    beforeDestroy: function() {
         window.removeEventListener('scroll', this.scrollCallback);
         // 完成持久化过程
         if (this.persistence) {
@@ -214,7 +212,8 @@ export default {
             });
         }
     },
-    render(h) {
+
+    render: function(h) {
         const $default = this.$scopedSlots.default;
         const displayList = $default ? $default({
             startIndex: this.startIndex,
@@ -250,6 +249,7 @@ export default {
             // 没有data的话，可能哪里存在问题
             if (vnode.data) {
                 const style = vnode.data.style;
+                // @ts-ignore
                 const id = vnode.componentOptions.propsData.id;
                 const top = this.metaMap[id].top + 'px';
                 if (!style) {
@@ -259,6 +259,7 @@ export default {
                 } else if (typeof style === 'string') {
                     vnode.data.style = style + `; top: ${top}`;
                 } else if (isPlainObject(style)) {
+                    // @ts-ignore
                     vnode.data.style.top = top;
                 }
             }
@@ -270,5 +271,5 @@ export default {
                 height: this.containerHeight + 'px',
             },
         }, displayList);
-    },
-}
+    }
+};
