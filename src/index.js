@@ -1,5 +1,13 @@
-import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
-import { isUndef, isPlainObject } from './utils';
+import Vue from 'vue';
+import { isUndef, isPlainObject, binarySearch } from './utils';
+
+// 在滚动完成后，如何确认当前应该显示的内容，需要一个跳跃表，跳跃表实际上是二分的逻辑，实时使用二分和使用跳跃表有什么区别吗？
+// 跳跃表是否是可以无限扩展的?
+// 二分查找是否足够快?
+// 需要考虑是使用内部scroll的形式，还是让container占据body来scroll
+// 当height更新的时候，所有的top进行更新是不可能的
+// 大量的new Image是否会导致内存占用
+// 因为对于ios来说，视频在没有点击的情况下并不会被触发，但是大量的创建视频元素也并不是一个好的做法
 
 export default {
     name: "LargeList",
@@ -110,36 +118,8 @@ export default {
         refresh: function(top) {
             const bottom = top + window.innerHeight + this.preloadHeight;
             top -= this.preloadHeight;
-            this.startIndex = top < 0 ? 0 : this.binarySearch(top);
-            this.endIndex = bottom < 0 ? 0 : this.binarySearch(bottom) + 1;
-        },
-
-        /**
-         * 二分搜索
-         */
-        binarySearch: function(targetTop) {
-            const finalId = this.idList[this.idList.length - 1];
-            if (targetTop > this.metaMap[finalId].top) {
-                return this.idList.length - 1;
-            }
-            let start = 0; // 前方下标
-            let end = this.idList.length - 1; // 后方下标
-            let pivot = Math.floor((start + end) / 2);
-            while (start + 1 < end) {
-                const id = this.idList[pivot];
-                const pivotTop = this.metaMap[id].top;
-
-                // 找到
-                if (pivotTop === targetTop) {
-                    return pivot;
-                } else if (pivotTop < targetTop) {
-                    start = pivot;
-                } else {
-                    end = pivot;
-                }
-                pivot = Math.floor((start + end) / 2); // 中间下标
-            }
-            return pivot;
+            this.startIndex = top < 0 ? 0 : binarySearch(top, this.idList, this.metaMap);
+            this.endIndex = bottom < 0 ? 0 : binarySearch(bottom, this.idList, this.metaMap) + 1;
         },
 
         /**

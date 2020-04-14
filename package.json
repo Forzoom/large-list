@@ -3,7 +3,7 @@
   "version": "0.0.2",
   "description": "list container element for performance",
   "main": "dist/large-list.cjs.js",
-  "module": "dist/large-list.js-esm.js",
+  "module": "dist/large-list.esm.js",
   "repository": "git@github.com:Forzoom/large-list.git",
   "author": "Forzoom",
   "license": "MIT",

@@ -1,5 +1,6 @@
 import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
-import { isUndef, isPlainObject } from './utils';
+import { isUndef, isPlainObject, binarySearch } from './utils';
+import { ListItem, MetaMap } from '../types';
 
 // 在滚动完成后，如何确认当前应该显示的内容，需要一个跳跃表，跳跃表实际上是二分的逻辑，实时使用二分和使用跳跃表有什么区别吗？
 // 跳跃表是否是可以无限扩展的?
@@ -12,9 +13,9 @@ import { isUndef, isPlainObject } from './utils';
 @Component({
     name: 'LargeList',
 })
-export default class LargeListComponent extends Vue {
+export default class LargeList extends Vue {
     /** 全部数据列表 */
-    @Prop({ type: Array, default() { return []; } }) public list!: LargeList.ListItem[];
+    @Prop({ type: Array, default() { return []; } }) public list!: ListItem[];
     /** 未加载条目的默认高度 */
     @Prop({ type: Number, default: 200 }) public defaultItemHeight!: number;
     /** 默认条目之间的间隔 */
@@ -27,7 +28,7 @@ export default class LargeListComponent extends Vue {
     @Prop() public load!: any;
 
     /** 存储无限加载所需要使用的原始信息 */
-    public metaMap: LargeList.MetaMap = {};
+    public metaMap: MetaMap = {};
     /** 开始显示内容 */
     public startIndex = 0;
     /** 结束显示内容 */
@@ -48,7 +49,7 @@ export default class LargeListComponent extends Vue {
 
     /** 当list发生更新 */
     @Watch('$props.list')
-    public onListChange(val: LargeList.ListItem[]) {
+    public onListChange(val: ListItem[]) {
         const height = this.defaultItemHeight + this.defaultItemGap;
         // 需要处理之前没有的数据
         for (let i = 0, len = val.length; i < len; i++) {
@@ -99,35 +100,8 @@ export default class LargeListComponent extends Vue {
     public refresh(top: number) {
         const bottom = top + window.innerHeight + this.preloadHeight;
         top -= this.preloadHeight;
-        this.startIndex = top < 0 ? 0 : this.binarySearch(top);
-        this.endIndex = bottom < 0 ? 0 : this.binarySearch(bottom) + 1;
-    }
-    /**
-     * 二分搜索
-     */
-    public binarySearch(targetTop: number) {
-        const finalId = this.idList[this.idList.length - 1];
-        if (targetTop > this.metaMap[finalId].top) {
-            return this.idList.length - 1;
-        }
-        let start = 0; // 前方下标
-        let end = this.idList.length - 1; // 后方下标
-        let pivot = Math.floor((start + end) / 2);
-        while (start + 1 < end) {
-            const id = this.idList[pivot];
-            const pivotTop = this.metaMap[id].top;
-
-            // 找到
-            if (pivotTop === targetTop) {
-                return pivot;
-            } else if (pivotTop < targetTop) {
-                start = pivot;
-            } else {
-                end = pivot;
-            }
-            pivot = Math.floor((start + end) / 2); // 中间下标
-        }
-        return pivot;
+        this.startIndex = top < 0 ? 0 : binarySearch(top, this.idList, this.metaMap);
+        this.endIndex = bottom < 0 ? 0 : binarySearch(bottom, this.idList, this.metaMap) + 1;
     }
     /**
      * 图片加载完成
@@ -206,10 +180,13 @@ export default class LargeListComponent extends Vue {
         (displayList || []).forEach((vnode) => {
             const instance = vnode.componentInstance;
             const options = vnode.componentOptions;
+            // 1. 有instance就一定有options
             // 依赖于未公开的instance._events，并不是一件好事
-            // @ts-ignore
-            if (instance && !instance._events.heightChange) {
-                instance.$on('heightChange', this.onHeightChange);
+            if (instance) {
+                // @ts-ignore
+                if (!instance._events.heightChange) {
+                    instance.$on('heightChange', this.onHeightChange);
+                }
             } else if (options) {
                 if (options.listeners) {
                     // @ts-ignore
@@ -219,7 +196,7 @@ export default class LargeListComponent extends Vue {
                         heightChange: this.onHeightChange,
                     };
                 }
-            } else if (!instance) {
+            } else {
                 if (vnode.data) {
                     if (vnode.data.on) {
                         vnode.data.on.heightChange = this.onHeightChange;
@@ -245,6 +222,8 @@ export default class LargeListComponent extends Vue {
                 } else if (isPlainObject(style)) {
                     // @ts-ignore
                     vnode.data.style.top = top;
+                    // @ts-ignore
+                    vnode.elm.style.top = top;
                 }
             }
         });
