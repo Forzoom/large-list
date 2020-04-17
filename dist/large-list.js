@@ -149,8 +149,16 @@
                 continue;
               }
 
+              var top = 0;
+
+              if (this.metaMap[prevId]) {
+                top = this.metaMap[prevId].top + this.metaMap[prevId].height;
+              } else {
+                top = 0 + this.defaultItemHeight;
+              }
+
               Vue.set(this.metaMap, '' + id, {
-                top: this.metaMap[prevId].top + this.metaMap[prevId].height,
+                top: top,
                 height: height
               });
               this.containerHeight += height;
@@ -169,7 +177,7 @@
           for (var i = oldEnd, len = Math.min(oldEnd + 8, this.idList.length); i < len; i++) {
             var prevId = this.idList[i - 1];
 
-            if (!prevId) {
+            if (isUndef(prevId)) {
               continue;
             } // 需要更新的内容，主要是top
 
@@ -305,7 +313,7 @@
           var options = vnode.componentOptions; // 依赖于未公开的instance._events，并不是一件好事
           // @ts-ignore
 
-          if (instance) {
+          if (instance && !instance._events.heightChange) {
             // @ts-ignore
             if (!instance._events.heightChange) {
               instance.$on('heightChange', _this2.onHeightChange);

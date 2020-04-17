@@ -40,15 +40,30 @@ export default {
 
 #### Props
 
+```
+interface PersistenceOptions {
+    metaMap: MetaMap;
+    startIndex: nuumber;
+    endIndex: number;
+    containerHeight: number;
+}
+```
+
 ------
-key|type|description
----|---|---
-list| ListItem[] | 列表数据
-defaultItemHeight | number | 每项元素的默认高度
-defaultItemGap | number | 两个列表元素之间的间隔
-preloadHeight | number | 预先检测的高度
-persistence | ({ metaMap: MetaMap, startIndex: nuumber, endIndex: number, containerHeight: number }) => void | 当传入persistence时，将尝试向persistence传入这些需要存储的数据
-load | void | 当传入load时，将尝试通过load函数获取之前存储的数据
+key|type|required|default|description
+---|---|---|---|---
+list              | ListItem[]                   | true  |       | data list
+defaultItemHeight | number                       | false | 100   | default height of list item
+defaultItemGap    | number                       | false | 10      default gap width of two list item
+preloadHeight     | number                       | false | 200   | 预先检测的高度
+persistence       | (PersistenceOptions) => void | false |       | 当传入persistence时，将尝试向persistence传入这些需要存储的数据
+load              | () => PersistenceOptions     | false |       |当传入load时，将尝试通过load函数获取之前存储的数据
+
+#### Event
+
+----
+name|description
+---|---
 
 ## Roadmap:
 

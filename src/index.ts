@@ -59,8 +59,15 @@ export default class LargeList extends Vue {
                 if (!prevId) {
                     continue;
                 }
+
+                let top = 0;
+                if (this.metaMap[prevId]) {
+                    top = this.metaMap[prevId].top + this.metaMap[prevId].height;
+                } else {
+                    top = 0 + this.defaultItemHeight;
+                }
                 Vue.set(this.metaMap, '' + id, {
-                    top: this.metaMap[prevId].top + this.metaMap[prevId].height,
+                    top,
                     height,
                 });
                 this.containerHeight += height;
@@ -78,7 +85,7 @@ export default class LargeList extends Vue {
         // 这样处理的意义目前不是特别明显，而且这个8应该是可以配置的
         for (let i = oldEnd, len = Math.min(oldEnd + 8, this.idList.length); i < len; i++) {
             const prevId = this.idList[i - 1];
-            if (!prevId) {
+            if (isUndef(prevId)) {
                 continue;
             }
             // 需要更新的内容，主要是top
