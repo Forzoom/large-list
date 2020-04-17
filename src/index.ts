@@ -100,8 +100,9 @@ export default class LargeList extends Vue {
     public refresh(top: number) {
         const bottom = top + window.innerHeight + this.preloadHeight;
         top -= this.preloadHeight;
-        this.startIndex = top < 0 ? 0 : binarySearch(top, this.idList, this.metaMap);
-        this.endIndex = bottom < 0 ? 0 : binarySearch(bottom, this.idList, this.metaMap) + 1;
+        const list = this.idList;
+        this.startIndex = (top < 0 || list.length === 0) ? 0 : binarySearch(top, list, this.metaMap);
+        this.endIndex = (bottom < 0 || list.length === 0) ? 0 : binarySearch(bottom, list, this.metaMap) + 1;
     }
     /**
      * 图片加载完成

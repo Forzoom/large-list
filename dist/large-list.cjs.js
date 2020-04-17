@@ -192,8 +192,9 @@ var index = {
     refresh: function refresh(top) {
       var bottom = top + window.innerHeight + this.preloadHeight;
       top -= this.preloadHeight;
-      this.startIndex = top < 0 ? 0 : binarySearch(top, this.idList, this.metaMap);
-      this.endIndex = bottom < 0 ? 0 : binarySearch(bottom, this.idList, this.metaMap) + 1;
+      var list = this.idList;
+      this.startIndex = top < 0 || list.length === 0 ? 0 : binarySearch(top, list, this.metaMap);
+      this.endIndex = bottom < 0 || list.length === 0 ? 0 : binarySearch(bottom, list, this.metaMap) + 1;
     },
 
     /**
@@ -302,8 +303,11 @@ var index = {
       var options = vnode.componentOptions; // 依赖于未公开的instance._events，并不是一件好事
       // @ts-ignore
 
-      if (instance && !instance._events.heightChange) {
-        instance.$on('heightChange', _this2.onHeightChange);
+      if (instance) {
+        // @ts-ignore
+        if (!instance._events.heightChange) {
+          instance.$on('heightChange', _this2.onHeightChange);
+        }
       } else if (options) {
         if (options.listeners) {
           // @ts-ignore
@@ -313,7 +317,7 @@ var index = {
             heightChange: _this2.onHeightChange
           };
         }
-      } else if (!instance) {
+      } else {
         if (vnode.data) {
           if (vnode.data.on) {
             vnode.data.on.heightChange = _this2.onHeightChange;
@@ -340,7 +344,9 @@ var index = {
           vnode.data.style = style + "; top: ".concat(top);
         } else if (isPlainObject(style)) {
           // @ts-ignore
-          vnode.data.style.top = top;
+          vnode.data.style.top = top; // @ts-ignore
+
+          vnode.elm.style.top = top;
         }
       }
     });

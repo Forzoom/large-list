@@ -6,6 +6,8 @@
 
 下面是常见的列表渲染形式，`<PostCard>`就是我们所需要的展现的列表元素。
 
+<img src="https://static.playground.forzoom.tech/article/large-list/post-basic-style.png" />
+
 ```html
 <div class="large-list">
   <PostCard v-for="(post, index) in list" :key="post.id" :post="post"></PostCard>
@@ -394,3 +396,7 @@ if (vnode.data) {
   }
 }
 ```
+
+## 相关工作
+
+
