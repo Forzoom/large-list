@@ -1,3 +1,6 @@
 node_modules
 build
 src
+.DS_Store
+babel.config.js
+tsconfig.json

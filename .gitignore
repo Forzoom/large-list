@@ -1,1 +1,4 @@
 node_modules
+.DS_Store
+babel.config.js
+tsconfig.json
