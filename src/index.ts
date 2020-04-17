@@ -22,6 +22,8 @@ export default class LargeList extends Vue {
     @Prop({ type: Number, default: 10 }) public defaultItemGap!: number;
     /** 预先检测的高度 */
     @Prop({ type: Number, default: 200 }) public preloadHeight!: number;
+    /** 高度偏移值 */
+    @Prop({ type: Number, default: 0 }) public offsetTop!: number;
     /** 持久化 */
     @Prop() public persistence!: any;
     /** 加载数据 */
@@ -70,7 +72,7 @@ export default class LargeList extends Vue {
 
         // 用于更新startIndex和endIndex
         const $el = this.$el as HTMLElement;
-        this.refresh(window.scrollY - ($el ? $el.offsetTop : 0));
+        this.refresh(window.scrollY - ($el ? ($el.offsetTop + this.offsetTop) : 0));
     }
 
     /** 当index发生更新 */
@@ -97,7 +99,7 @@ export default class LargeList extends Vue {
      */
     public scrollCallback() {
         const $el = this.$el as HTMLElement;
-        this.refresh(window.scrollY - ($el ? $el.offsetTop : 0));
+        this.refresh(window.scrollY - ($el ? ($el.offsetTop + this.offsetTop) : 0));
     }
     /**
      * 刷新数据

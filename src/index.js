@@ -25,6 +25,9 @@ export default {
         /** 预先检测的高度 */
         preloadHeight: { type: Number, default: 200 },
 
+        /** 预先检测的高度 */
+        offsetTop: { type: Number, default: 0 },
+
         /** 持久化 */
         persistence: {},
 
@@ -86,7 +89,7 @@ export default {
 
             // 用于更新startIndex和endIndex
             const $el = this.$el;
-            this.refresh(window.scrollY - ($el ? $el.offsetTop : 0));
+            this.refresh(window.scrollY - ($el ? ($el.offsetTop + this.offsetTop) : 0));
         },
 
         /** 当index发生更新 */
@@ -114,7 +117,7 @@ export default {
          */
         scrollCallback: function() {
             const $el = this.$el;
-            this.refresh(window.scrollY - ($el ? $el.offsetTop : 0));
+            this.refresh(window.scrollY - ($el ? ($el.offsetTop + this.offsetTop) : 0));
         },
 
         /**
