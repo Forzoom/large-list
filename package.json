@@ -1,6 +1,6 @@
 {
   "name": "large-list",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "list container element for performance",
   "main": "dist/large-list.cjs.js",
   "module": "dist/large-list.esm.js",

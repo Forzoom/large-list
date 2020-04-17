@@ -142,11 +142,6 @@ var index = {
 
         if (isUndef(this.metaMap[id])) {
           var prevId = this.idList[i - 1];
-
-          if (!prevId) {
-            continue;
-          }
-
           var top = 0;
 
           if (this.metaMap[prevId]) {
@@ -161,7 +156,11 @@ var index = {
           });
           this.containerHeight += height;
         }
-      }
+      } // 用于更新startIndex和endIndex
+
+
+      var $el = this.$el;
+      this.refresh(window.scrollY - ($el ? $el.offsetTop : 0));
     },
 
     /** 当index发生更新 */

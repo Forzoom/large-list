@@ -56,10 +56,6 @@ export default class LargeList extends Vue {
             const id = this.idList[i];
             if (isUndef(this.metaMap[id])) {
                 const prevId = this.idList[i - 1];
-                if (!prevId) {
-                    continue;
-                }
-
                 let top = 0;
                 if (this.metaMap[prevId]) {
                     top = this.metaMap[prevId].top + this.metaMap[prevId].height;
@@ -73,6 +69,10 @@ export default class LargeList extends Vue {
                 this.containerHeight += height;
             }
         }
+
+        // 用于更新startIndex和endIndex
+        const $el = this.$el as HTMLElement;
+        this.refresh(window.scrollY - ($el ? $el.offsetTop : 0));
     }
 
     /** 当index发生更新 */
