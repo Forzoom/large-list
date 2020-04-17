@@ -75,8 +75,6 @@ export default {
                     let top = 0;
                     if (this.metaMap[prevId]) {
                         top = this.metaMap[prevId].top + this.metaMap[prevId].height;
-                    } else {
-                        top = 0 + this.defaultItemHeight;
                     }
                     Vue.set(this.metaMap, '' + id, {
                         top,
