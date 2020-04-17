@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>Post Basic Style</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            font-family: sans-serif;
+        }
+        .post-card {
+            position: relative;
+            margin-bottom: 10px;
+            background-color: #fff;
+        }
+        .post-card .community-header {
+            padding: 20px 5px 0;
+        }
+        .post-card .community-header .avatar {
+            float: left;
+            width: 48px;
+            height: 48px;
+            background-color: #ddd;
+            border: 1px solid #eee;
+            border-radius: 50%;
+        }
+        .post-card .community-header .name-wrap {
+            box-sizing: border-box;
+            padding-left: 10px;
+            float: left;
+            height: 48px;
+            max-width: 280px;
+        }
+        .post-card .community-header .name-wrap .name {
+            font-size: 16px;
+            line-height: 48px;
+            color: #333;
+            font-weight: 700;
+        }
+        .post-card .community-header .name-wrap .name.active {
+            line-height: 22px;
+        }
+
+        .post-card .community-header .name-wrap span {
+            font-size: 12px;
+            height: 20px;
+            line-height: 20px;
+            padding-top: 2px;
+            color: #999;
+        }
+
+        .post-card .community-text {
+            padding: 10px 5px 5px;
+            font-size: 14px;
+            line-height: 24px;
+            color: #000;
+            word-break: break-all;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .post-card .community-footer {
+            position: relative;
+            padding: 7px 0;
+            font-size: 16px;
+            line-height: 22px;
+            color: #555;
+            text-align: center;
+            border-top: 1px solid #eee;
+        }
+        .post-card .community-footer .icon {
+            font-size: 22px;
+            vertical-align: middle;
+        }
+        .post-card .community-footer .primary-color {
+            color: #0099ff;
+        }
+
+        .col {
+            float: left;
+        }
+        .col-4 {
+            width: 33%;
+        }
+
+        .clearfix:before,
+        .clearfix:after {
+                content: '';
+                display: table;
+        }
+        .clearfix:after {
+            clear: both;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script src="https://cdn.bootcss.com/vue/2.6.11/vue.min.js"></script>
+    <script type="text/template" id="tpl-post-card">
+        <div class="post-card">
+            <div class="community-header clearfix">
+                  <img class="avatar" src="https://static.playground.forzoom.tech/meta/square/1.jpg" />
+                  <div class="name-wrap">
+                      <div class="name active">
+                          用户昵称
+                      </div>
+                      <span>3分钟前</span>
+                  </div>
+              </div>
+        
+              <div class="community-text">这是主体内容</div>
+        
+            <!-- 底部内容 -->
+            <div class="community-footer before-line">
+                <div class="clearfix">
+                    <div class="col col-4">
+                        分享
+                    </div>
+                    <div class="col col-4">
+                        评论
+                    </div>
+                    <div class="col col-4">
+                        点赞
+                    </div>
+                </div>
+            </div>
+        </div></script>
+    <script>
+        const tpl = document.getElementById('tpl-post-card').innerHTML;
+        new Vue({
+            el: '#root',
+            template: tpl,
+            created() {
+                console.log('target2');
+            },
+        });
+    </script>
+</body>
+</html>
