@@ -136,8 +136,34 @@ var index = {
   },
   watch: {
     /** 当list发生更新 */
-    "$props.list": function $propsList(val) {
-      var height = this.defaultItemHeight + this.defaultItemGap; // 需要处理之前没有的数据
+    "$props.list": function $propsList(val, oldVal) {
+      var defaultHeight = this.defaultItemHeight + this.defaultItemGap;
+      var containerHeight = this.containerHeight; // 删除所有的高度，重新添加高度
+
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = oldVal[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var item = _step.value;
+          containerHeight -= this.metaMap[item.id].height;
+        } // 需要处理之前没有的数据
+
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator["return"] != null) {
+            _iterator["return"]();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
 
       for (var i = 0, len = val.length; i < len; i++) {
         var id = this.idList[i];
@@ -148,16 +174,42 @@ var index = {
 
           if (this.metaMap[prevId]) {
             top = this.metaMap[prevId].top + this.metaMap[prevId].height;
-          }
+          } // 为metaMap设置数据
+
 
           Vue.set(this.metaMap, '' + id, {
             top: top,
-            height: height
+            height: defaultHeight
           });
-          this.containerHeight += height;
         }
-      } // 用于更新startIndex和endIndex
+      } // 添加高度
 
+
+      var _iteratorNormalCompletion2 = true;
+      var _didIteratorError2 = false;
+      var _iteratorError2 = undefined;
+
+      try {
+        for (var _iterator2 = val[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+          var _item = _step2.value;
+          containerHeight += this.metaMap[_item.id].height;
+        }
+      } catch (err) {
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion2 && _iterator2["return"] != null) {
+            _iterator2["return"]();
+          }
+        } finally {
+          if (_didIteratorError2) {
+            throw _iteratorError2;
+          }
+        }
+      }
+
+      this.containerHeight = containerHeight; // 用于更新startIndex和endIndex
 
       var $el = this.$el;
       this.refresh(window.scrollY - ($el ? $el.offsetTop + this.offsetTop : 0));
@@ -212,13 +264,13 @@ var index = {
       var height = this.metaMap[id].height = newHeight + this.defaultItemGap;
       this.containerHeight += height - oldHeight;
       var transform = false;
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
+      var _iteratorNormalCompletion3 = true;
+      var _didIteratorError3 = false;
+      var _iteratorError3 = undefined;
 
       try {
-        for (var _iterator = this.displayList[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var item = _step.value;
+        for (var _iterator3 = this.displayList[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+          var item = _step3.value;
 
           if (item.id === id) {
             transform = true;
@@ -231,16 +283,16 @@ var index = {
           }
         }
       } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
+        _didIteratorError3 = true;
+        _iteratorError3 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion && _iterator["return"] != null) {
-            _iterator["return"]();
+          if (!_iteratorNormalCompletion3 && _iterator3["return"] != null) {
+            _iterator3["return"]();
           }
         } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
+          if (_didIteratorError3) {
+            throw _iteratorError3;
           }
         }
       }

@@ -51,8 +51,15 @@ export default class LargeList extends Vue {
 
     /** 当list发生更新 */
     @Watch('$props.list')
-    public onListChange(val: ListItem[]) {
-        const height = this.defaultItemHeight + this.defaultItemGap;
+    public onListChange(val: ListItem[], oldVal: ListItem[]) {
+        const defaultHeight = this.defaultItemHeight + this.defaultItemGap;
+        let containerHeight = this.containerHeight;
+
+        // 删除所有的高度，重新添加高度
+        for (const item of oldVal) {
+            containerHeight -= this.metaMap[item.id].height;
+        }
+
         // 需要处理之前没有的数据
         for (let i = 0, len = val.length; i < len; i++) {
             const id = this.idList[i];
@@ -62,13 +69,19 @@ export default class LargeList extends Vue {
                 if (this.metaMap[prevId]) {
                     top = this.metaMap[prevId].top + this.metaMap[prevId].height;
                 }
+                // 为metaMap设置数据
                 Vue.set(this.metaMap, '' + id, {
                     top,
-                    height,
+                    height: defaultHeight,
                 });
-                this.containerHeight += height;
             }
         }
+
+        // 添加高度
+        for (const item of val) {
+            containerHeight += this.metaMap[item.id].height;
+        }
+        this.containerHeight = containerHeight;
 
         // 用于更新startIndex和endIndex
         const $el = this.$el as HTMLElement;
