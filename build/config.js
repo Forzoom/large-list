@@ -7,7 +7,7 @@ const extensions = [ '.ts', '.js' ];
 
 module.exports = exports = [
     {
-        input: './src/index.js',
+        input: './src/index.ts',
         output: {
             file: './dist/large-list.esm.js',
             format: 'esm',

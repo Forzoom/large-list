@@ -1,4 +1,3 @@
-import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
 import { defineComponent, reactive, computed, watch, onMounted, onBeforeUnmount } from '@vue/composition-api';
 import { isUndef, isPlainObject } from '../utils';
 
@@ -205,7 +204,7 @@ const C = defineComponent({
                 // @ts-ignore
                 if (instance && !instance._events.heightChange) {
                     instance.$on('heightChange', this.onHeightChange);
-                } else if (options) {
+                } else {
                     if (options.listeners) {
                         // @ts-ignore
                         options.listeners.heightChange = this.onHeightChange;
@@ -214,18 +213,9 @@ const C = defineComponent({
                             heightChange: this.onHeightChange,
                         };
                     }
-                } else if (!instance) {
-                    if (vnode.data) {
-                        if (vnode.data.on) {
-                            vnode.data.on.heightChange = onHeightChange;
-                        } else {
-                            vnode.data.on = {
-                                heightChange: onHeightChange,
-                            };
-                        }
-                    }
                 }
                 // 没有data的话，可能哪里存在问题
+                // 从目前的代码来看，data也是一直存在的
                 if (vnode.data) {
                     const style = vnode.data.style;
                     // @ts-ignore
