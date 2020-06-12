@@ -727,6 +727,13 @@
   dependencies:
     "@types/node" "*"
 
+"@vue/composition-api@^0.4.0":
+  version "0.4.0"
+  resolved "https://registry.npm.taobao.org/@vue/composition-api/download/@vue/composition-api-0.4.0.tgz#04e600106687de719d587c704296aa4a5b37ca28"
+  integrity sha1-BOYAEGaH3nGdWHxwQpaqSls3yig=
+  dependencies:
+    tslib "^1.9.3"
+
 acorn@^7.1.0:
   version "7.1.1"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.1.1.tgz#e35668de0b402f359de515c5482a1ab9f89a69bf"
@@ -1139,6 +1146,11 @@ to-fast-properties@^2.0.0:
   version "2.0.0"
   resolved "https://registry.npm.taobao.org/to-fast-properties/download/to-fast-properties-2.0.0.tgz?cache=0&sync_timestamp=1573620967166&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fto-fast-properties%2Fdownload%2Fto-fast-properties-2.0.0.tgz#dc5e698cbd079265bc73e0377681a4e4e83f616e"
   integrity sha1-3F5pjL0HkmW8c+A3doGk5Og/YW4=
+
+tslib@^1.9.3:
+  version "1.11.0"
+  resolved "https://registry.npm.taobao.org/tslib/download/tslib-1.11.0.tgz#f1f3528301621a53220d58373ae510ff747a66bc"
+  integrity sha1-8fNSgwFiGlMiDVg3OuUQ/3R6Zrw=
 
 typescript@^3.7.2:
   version "3.7.2"

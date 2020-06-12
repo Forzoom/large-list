@@ -11,7 +11,9 @@
   "scripts": {
     "build": "node build/build.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@vue/composition-api": "^0.4.0"
+  },
   "peerDependencies": {
     "core-js": "2"
   },
