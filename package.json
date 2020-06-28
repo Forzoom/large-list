@@ -1,6 +1,6 @@
 {
   "name": "large-list",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "list container element for performance",
   "main": "dist/large-list.cjs.js",
   "module": "dist/large-list.esm.js",
@@ -12,9 +12,6 @@
     "build": "node build/build.js"
   },
   "dependencies": {},
-  "peerDependencies": {
-    "core-js": "2"
-  },
   "devDependencies": {
     "@babel/core": "^7.7.4",
     "@babel/plugin-proposal-class-properties": "^7.7.4",
