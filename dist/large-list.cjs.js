@@ -95,10 +95,26 @@ var index = {
       "default": 200
     },
 
-    /** 预先检测的高度 */
+    /** 高度偏移值 */
     offsetTop: {
       type: Number,
       "default": 0
+    },
+
+    /** 滚动事件 */
+    scrollEvent: {
+      type: [String, Function],
+      "default": 'scroll'
+    },
+
+    /** 屏幕高度 */
+    screenHeight: {
+      type: Number
+    },
+
+    /** 屏幕位置 */
+    scrollY: {
+      type: Number
     },
 
     /** 持久化 */
@@ -136,6 +152,12 @@ var index = {
     /** 所展示的条目列表 */
     displayList: function displayList() {
       return this.list.slice(this.startIndex, this.endIndex);
+    },
+    screenHeight2: function screenHeight2() {
+      return this.screenHeight || window.innerHeight;
+    },
+    scrollY2: function scrollY2() {
+      return this.scrollY || window.scrollY;
     }
   },
   watch: {
@@ -216,7 +238,7 @@ var index = {
       this.containerHeight = containerHeight; // 用于更新startIndex和endIndex
 
       var $el = this.$el;
-      this.refresh(window.scrollY - ($el ? $el.offsetTop + this.offsetTop : 0));
+      this.refresh(this.scrollY2 - ($el ? $el.offsetTop + this.offsetTop : 0));
     },
 
     /** 当index发生更新 */
@@ -246,14 +268,14 @@ var index = {
      */
     scrollCallback: function scrollCallback() {
       var $el = this.$el;
-      this.refresh(window.scrollY - ($el ? $el.offsetTop + this.offsetTop : 0));
+      this.refresh(this.scrollY2 - ($el ? $el.offsetTop + this.offsetTop : 0));
     },
 
     /**
      * 刷新数据
      */
     refresh: function refresh(top) {
-      var bottom = top + window.innerHeight + this.preloadHeight;
+      var bottom = top + this.screenHeight2 + this.preloadHeight;
       top -= this.preloadHeight;
       var list = this.idList;
       this.startIndex = top < 0 || list.length === 0 ? 0 : binarySearch(top, list, this.metaMap);
@@ -331,7 +353,9 @@ var index = {
       this.containerHeight = containerHeight;
     }
 
-    window.addEventListener('scroll', this.scrollCallback);
+    if (this.scrollEvent) {
+      window.addEventListener('scroll', this.scrollCallback);
+    }
   },
   mounted: function mounted() {
     var _this = this;
@@ -342,7 +366,10 @@ var index = {
     });
   },
   beforeDestroy: function beforeDestroy() {
-    window.removeEventListener('scroll', this.scrollCallback); // 完成持久化过程
+    if (this.scrollEvent) {
+      window.removeEventListener('scroll', this.scrollCallback);
+    } // 完成持久化过程
+
 
     if (this.persistence) {
       this.persistence({
@@ -363,10 +390,10 @@ var index = {
     }) : [];
     (displayList || []).forEach(function (vnode) {
       var instance = vnode.componentInstance;
-      var options = vnode.componentOptions; // 依赖于未公开的instance._events，并不是一件好事
-      // @ts-ignore
+      var options = vnode.componentOptions; // 1. 有instance就一定有options
+      // 依赖于未公开的instance._events，并不是一件好事
 
-      if (instance && !instance._events.heightChange) {
+      if (instance) {
         // @ts-ignore
         if (!instance._events.heightChange) {
           instance.$on('heightChange', _this2.onHeightChange);

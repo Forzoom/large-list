@@ -24,6 +24,12 @@ export default class LargeList extends Vue {
     @Prop({ type: Number, default: 200 }) public preloadHeight!: number;
     /** 高度偏移值 */
     @Prop({ type: Number, default: 0 }) public offsetTop!: number;
+    /** 滚动事件 */
+    @Prop({ type: [ String, Function ], default: 'scroll' }) public scrollEvent!: 'scroll' | 'none';
+    /** 屏幕高度 */
+    @Prop({ type: Number }) public screenHeight?: number;
+    /** 屏幕位置 */
+    @Prop({ type: Number }) public scrollY?: number;
     /** 持久化 */
     @Prop() public persistence!: any;
     /** 加载数据 */
@@ -47,6 +53,12 @@ export default class LargeList extends Vue {
     /** 所展示的条目列表 */
     public get displayList() {
         return this.list.slice(this.startIndex, this.endIndex);
+    }
+    public get screenHeight2() {
+        return this.screenHeight || window.innerHeight;
+    }
+    public get scrollY2() {
+        return this.scrollY || window.scrollY;
     }
 
     /** 当list发生更新 */
@@ -85,7 +97,7 @@ export default class LargeList extends Vue {
 
         // 用于更新startIndex和endIndex
         const $el = this.$el as HTMLElement;
-        this.refresh(window.scrollY - ($el ? ($el.offsetTop + this.offsetTop) : 0));
+        this.refresh(this.scrollY2 - ($el ? ($el.offsetTop + this.offsetTop) : 0));
     }
 
     /** 当index发生更新 */
@@ -112,13 +124,13 @@ export default class LargeList extends Vue {
      */
     public scrollCallback() {
         const $el = this.$el as HTMLElement;
-        this.refresh(window.scrollY - ($el ? ($el.offsetTop + this.offsetTop) : 0));
+        this.refresh(this.scrollY2 - ($el ? ($el.offsetTop + this.offsetTop) : 0));
     }
     /**
      * 刷新数据
      */
     public refresh(top: number) {
-        const bottom = top + window.innerHeight + this.preloadHeight;
+        const bottom = top + this.screenHeight2 + this.preloadHeight;
         top -= this.preloadHeight;
         const list = this.idList;
         this.startIndex = (top < 0 || list.length === 0) ? 0 : binarySearch(top, list, this.metaMap);
@@ -171,7 +183,9 @@ export default class LargeList extends Vue {
             this.containerHeight = containerHeight;
         }
 
-        window.addEventListener('scroll', this.scrollCallback);
+        if (this.scrollEvent === 'scroll') {
+            window.addEventListener('scroll', this.scrollCallback);
+        }
     }
     public mounted() {
         // 完成首次刷新
@@ -180,7 +194,10 @@ export default class LargeList extends Vue {
         });
     }
     public beforeDestroy() {
-        window.removeEventListener('scroll', this.scrollCallback);
+        if (this.scrollEvent === 'scroll') {
+            window.removeEventListener('scroll', this.scrollCallback);
+        }
+
         // 完成持久化过程
         if (this.persistence) {
             this.persistence({
